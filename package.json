@@ -8,8 +8,9 @@
     "node": ">=10.0"
   },
   "scripts": {
+    "start": "node server.js",
     "dev": "run-s dev:js webpack-server",
-    "build": "run-s build:dir build:js",
+    "build": "run-s build:dir build:js start",
     "prebuild": "run-s clean lint",
     "clean": "rimraf build",
     "lint": "eslint src/js/",
@@ -17,8 +18,7 @@
     "webpack-watch": "webpack --env NODE_ENV=dev --progress --color --watch --hot",
     "dev:js": "webpack --env NODE_ENV=dev",
     "build:dir": "copyfiles -a -u 2 src/public/assets/**/*.* build/",
-    "build:js": "webpack --env NODE_ENV=prod --progress --color",
-    "start": "node server.js"
+    "build:js": "webpack --env NODE_ENV=prod --progress --color"
   },
   "dependencies": {
     "express": "^4.17.1",
