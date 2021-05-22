@@ -22,7 +22,6 @@ io.sockets.on('connection', function(socket) {
     array.push.apply(array, arguments);
     socket.emit('log', array);
   }
-  log("PATH" + path.join(__dirname, '/node_modules'));
 
   socket.on('message', function(room, message) {
     log('Client said: ', message);
@@ -35,7 +34,7 @@ io.sockets.on('connection', function(socket) {
 
     var clientsInRoom = io.sockets.adapter.rooms[room];
     var numClients = clientsInRoom ? Object.keys(clientsInRoom.sockets).length : 0;
-    log('Room ' + room + ' now has ' + numClients + ' client(s)');
+    log('Room ' + room + ' now has ' + (numClients + 1) + ' client(s)');
 
     if (numClients === 0) {
       socket.join(room);

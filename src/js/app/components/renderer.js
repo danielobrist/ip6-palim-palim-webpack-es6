@@ -10,7 +10,10 @@ export default class Renderer {
     this.container = container;
 
     // Create WebGL renderer and set its antialias
-    this.threeRenderer = new THREE.WebGLRenderer({antialias: true});
+    this.threeRenderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true
+    });
 
     // Set clear color to fog to enable fog or to hex color for no fog
     this.threeRenderer.setClearColor(scene.fog.color);

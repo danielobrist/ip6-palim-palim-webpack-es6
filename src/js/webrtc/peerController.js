@@ -1,127 +1,155 @@
-import {VideoController} from './videoController.js';
-import {changeCameraPosition, getSceneJSON, updateRemoteObjects} from '../3d/three.js';
 
-export {PeerController};
+export default class PeerController {
+    constructor() {
 
-const PeerController = () => {
-    const videoController = VideoController();
-    let peerConnection;
-    let dataChannel;
+        this.localStream = null;
+        this.remoteStream = null;
 
-    let isStarted = false;
-
-    /////////////////////////////////////////////
-
-    const socket = io.connect();
-
-    let isChannelReady = false;
-    let isInitiator = false;
-    let room = getRoomName();
-
-    if (room !== '') {
-        socket.emit('create or join', room);
-        console.log('Attempted to create or join room', room);
-    }
-
-    socket.on('created', function(room) {
-        console.log('Created room ' + room);
-        isInitiator = true;
-        // changeCameraPosition();
-    });
-
-    socket.on('full', function(room) {
-        //TODO show user that room is full.
-        console.log('Room ' + room + ' is full');
-    });
-      
-    socket.on('join', function (room){
-        console.log('Another peer made a request to join room ' + room);
-        console.log('This peer is the initiator of room ' + room + '!');
-        isChannelReady = true;
-    });
-      
-    socket.on('joined', function(room) {
-        console.log('joined: ' + room);
-        isChannelReady = true;
-    });
-      
-    socket.on('log', function(array) {
-        console.log.apply(console, array);
-    });
-      
-    socket.on('message', function(message) {
-        console.log('Client received message:', message);
-        if (message === 'got user media') {
-            maybeStart();
-        } else if (message.type === 'offer') {
-            if (!isInitiator && !isStarted) {
-                maybeStart();
-            }
-            peerConnection.setRemoteDescription(message)
-            .then(function () {
-                return doAnswer();
-            })
-        } else if (message.type === 'answer' && isStarted) {
-            peerConnection.setRemoteDescription(new RTCSessionDescription(message));
-        } else if (message.type === 'candidate' && isStarted) {
-                var candidate = new RTCIceCandidate({
-                sdpMLineIndex: message.label,
-                candidate: message.candidate
-            });
-            peerConnection.addIceCandidate(candidate);
-        } else if (message === 'bye' && isStarted) {
-            handleRemoteHangup();
+        /////////////////////////////////////////////
+        const io = require('socket.io-client');
+        this.socket = io.connect();
+     
+        this.isChannelReady = false;
+        this.isInitiator = false;
+        this.room = prompt('Enter room name:');
+     
+        if (this.room !== '') {
+            this.socket.emit('create or join', this.room);
+            console.log('Attempted to create or join room', this.room);
         }
-    });
+        //////////////////////////////////////////////
+
+        this.pcConfig = {
+            'iceServers': [
+              {
+                'urls': 'stun:stun.l.google.com:19302'
+              },
+              {
+                'urls': 'turn:numb.viagenie.ca',
+                'credential': 'muazkh',
+                'username': 'webrtc@live.com'
+              },
+              {
+                'urls': 'turn:192.158.29.39:3478?transport=udp',
+                'credential': 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+                'username': '28224511:1379330808'
+              },
+              {
+                'urls': 'turn:192.158.29.39:3478?transport=tcp',
+                'credential': 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
+                'username': '28224511:1379330808'
+              }
+            ]
+        };
     
-    const getRoomName = () => {
-        room = prompt('Enter room name:');
-    }
-      
-    function sendMessage(message) {
-        console.log('Client sending message: ', message);
-        socket.emit('message',room, message); 
+        this.isStarted = false;
+        this.peerConnection = this.createPeerConnection();
+        this.dataChannel = this.initDataChannel();
+    
+        this.socket.on('created', function(room) {
+            console.log('Created room ' + room);
+            this.isInitiator = true;
+            // changeCameraPosition();
+        });
+    
+        this.socket.on('full', function(room) {
+            //TODO show user that room is full.
+            console.log('Room ' + room + ' is full');
+        });
+          
+        this.socket.on('join', function (room){
+            console.log('Another peer made a request to join room ' + room);
+            console.log('You are the initiator of room ' + room + '!');
+            this.isChannelReady = true;
+        });
+          
+        this.socket.on('joined', function(room) {
+            console.log('Joined room: ' + room);
+            this.isChannelReady = true;
+        });
+          
+        this.socket.on('log', function(array) {
+            console.log.apply(console, array);
+        });
+          
+        this.socket.on('message', function(message) {
+            console.log('Client received message:', message);
+            if (message === 'got user media') {
+                this.maybeStart();
+            } else if (message.type === 'offer') {
+                if (!this.isInitiator && !this.isStarted) {
+                    this.maybeStart();
+                }
+                this.peerConnection.setRemoteDescription(message)
+                .then(function () {
+                    return doAnswer();
+                })
+            } else if (message.type === 'answer' && this.isStarted) {
+                this.peerConnection.setRemoteDescription(new RTCSessionDescription(message));
+            } else if (message.type === 'candidate' && this.isStarted) {
+                    let candidate = new RTCIceCandidate({
+                    sdpMLineIndex: message.label,
+                    candidate: message.candidate
+                });
+                this.peerConnection.addIceCandidate(candidate);
+            } else if (message === 'bye' && this.isStarted) {
+                handleRemoteHangup();
+            }
+        });
+        
     }
 
-
-    /////////////////////////////////////
-    const pcConfig = {
-        'iceServers': [
-          {
-            'urls': 'stun:stun.l.google.com:19302'
-          },
-          {
-            'urls': 'turn:numb.viagenie.ca',
-            'credential': 'muazkh',
-            'username': 'webrtc@live.com'
-          },
-          {
-            'urls': 'turn:192.158.29.39:3478?transport=udp',
-            'credential': 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-            'username': '28224511:1379330808'
-          },
-          {
-            'urls': 'turn:192.158.29.39:3478?transport=tcp',
-            'credential': 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-            'username': '28224511:1379330808'
+    maybeStart() {
+        console.log('>>>>>>> maybeStart() ', this.isStarted, this.localStream, this.isChannelReady);
+        if (!this.isStarted && typeof this.localStream !== 'undefined' && this.isChannelReady) {
+          console.log('>>>>>> creating peer connection');
+          this.createPeerConnection();
+          
+          for (const track of this.localStream.getTracks()) {
+            this.peerConnection.addTrack(track);
+            console.log('added track to peerconnection');
           }
-        ]
-    };
+      
+          this.isStarted = true;
+          console.log('isInitiator', this.isInitiator);
+          if (this.isInitiator) {
+            this.initDataChannel();
+            console.log('Created RTCDataChannel');
+            this.doCall();
+          }
+      
+        //   gameController.startSharedSceneSync();
+        }
+    }
 
-    const createPeerConnection = () => {
+    initLocalStream(stream) {
+        console.log('Adding local stream.');
+        console.log('this: ' + this);
+        console.log('stream: ' + stream);
+        this.localStream = stream;
+        this.localVideo.srcObject = stream;
+        this.sendMessage('got user media');
+        if (this.isInitiator) {
+          this.maybeStart();
+        }
+    }
+
+    createPeerConnection() {
         try {
+            let peerConnection;
             if (location.hostname !== 'localhost') {
-                peerConnection = new RTCPeerConnection(pcConfig);
+                peerConnection = new RTCPeerConnection(this.pcConfig);
             } else {
-                peerConnection = new RTCPeerConnection(null);
+                peerConnection = new RTCPeerConnection(this.pcConfig);
             } 
         
-            peerConnection.onicecandidate = handleIceCandidate;
-            peerConnection.ontrack = handleTrackAdded;
-            peerConnection.ondatachannel = handleDataChannelAdded;
+            peerConnection.onicecandidate = this.handleIceCandidate;
+            peerConnection.ontrack = this.handleTrackAdded;
+            peerConnection.ondatachannel = this.handleDataChannelAdded;
         
-            console.log('Created RTCPeerConnnection');
-        
+            console.log('Created RTCPeerConnnection: ' + peerConnection);
+            return peerConnection;
+
           } catch (e) {
             console.log('Failed to create PeerConnection, exception: ' + e.message);
             alert('Cannot create RTCPeerConnection object.');
@@ -129,12 +157,27 @@ const PeerController = () => {
         }
     }
 
-    
+    initDataChannel() {
+        console.log('CREATING DATACHANNEL gameUpdates')
+        let dataChannel = this.peerConnection.createDataChannel('gameUpdates', {
+            ordered: false,
+            id: this.room
+        });
+        dataChannel.onmessage = this.handleReceiveMessage;
+        dataChannel.onerror = function (error) {
+            console.log("Data Channel Error:", error);
+        };
+        dataChannel.onopen = this.handleDataChannelStatusChange;
+        dataChannel.onclose = this.handleDataChannelStatusChange;
+        
+        console.log('CREATED DATACHANNEL gameUpdates');
+        return dataChannel;
+    }
 
-    const handleIceCandidate = (event) => {
+    handleIceCandidate(event) {
         console.log('icecandidate event: ', event);
         if (event.candidate) {
-            sendMessage({
+            this.sendMessage({
                 type: 'candidate',
                 label: event.candidate.sdpMLineIndex,
                 id: event.candidate.sdpMid,
@@ -145,58 +188,44 @@ const PeerController = () => {
         }
     }
 
-    const handleTrackAdded = (event) => {
+    sendMessage(message) {
+        console.log('Client sending message: ', message);
+        this.socket.emit('message',this.room, message); 
+    }
+
+    handleTrackAdded(event) {
         if (event.streams && event.streams[0]) {
             console.log("event streams detected")
-            remoteVideo.srcObject = event.streams[0];
+            this.remoteVideo.srcObject = event.streams[0];
         } else {
-            if (!remoteStream) {
+            if (!this.remoteStream) {
                 console.log("Creating new MediaStream")
-            remoteStream = new MediaStream();
+                this.remoteStream = new MediaStream();
             }
             console.log("adding track to remote stream")
-            remoteStream.addTrack(event.track);
-            remoteVideo.setAttribute('src', remoteStream);
-            remoteVideo.srcObject = remoteStream;
+            this.remoteStream.addTrack(event.track);
+            this.remoteVideo.setAttribute('src', this.remoteStream);
+            this.remoteVideo.srcObject = this.remoteStream;
         }
-        remoteVideo.autoplay = true;
+        this.remoteVideo.autoplay = true;
     }
 
-    const initDataChannel = () => {
-        console.log('CREATING DATACHANNEL gameUpdates')
-        dataChannel = peerConnection.createDataChannel('gameUpdates', {
-            ordered: false,
-            id: room
-        });
-        dataChannel.onmessage = handleReceiveMessage;
-        dataChannel.onerror = function (error) {
-            console.log("Data Channel Error:", error);
-        };
-        dataChannel.onopen = handleDataChannelStatusChange;
-        dataChannel.onclose = handleDataChannelStatusChange;
-        
-        console.log('CREATED DATACHANNEL gameUpdates')
-    }
-
-    const handleDataChannelAdded = (event) => {
+    handleDataChannelAdded(event) {
         console.log('Received Channel Callback');
-        dataChannel = event.channel;
-        dataChannel.onmessage = handleReceiveMessage;
-        dataChannel.onerror = function (error) {
+        this.dataChannel = event.channel;
+        this.dataChannel.onmessage = this.handleReceiveMessage;
+        this.dataChannel.onerror = function (error) {
             console.log("Data Channel Error:", error);
         };
-        dataChannel.onopen = handleDataChannelStatusChange;
-        dataChannel.onclose = handleDataChannelStatusChange;
+        this.dataChannel.onopen = this.handleDataChannelStatusChange;
+        this.dataChannel.onclose = this.handleDataChannelStatusChange;
         console.log('CREATED DATACHANNEL gameUpdates');
     }
 
-    const handleReceiveMessage = (event) => {
-        updateRemoteObjects(event.data);
-    }
-
-    const handleDataChannelStatusChange = () => {
-        if (dataChannel) {
-            let state = dataChannel.readyState;
+        
+    handleDataChannelStatusChange() {
+        if (this.dataChannel) {
+            let state = this.dataChannel.readyState;
       
             if (state === "open") {
                 console.log("DATA CHANNEL STATE: open")
@@ -206,89 +235,75 @@ const PeerController = () => {
         }
     }
 
-    const doCall = () => {
-        console.log('Sending offer to peer');
-        peerConnection.createOffer(setLocalAndSendMessage, handleCreateOfferError);
+    handleReceiveMessage(event) {
+        // updateRemoteObjects(event.data);
     }
 
-    const doAnswer = () => {
+    doCall() {
+        console.log('Sending offer to peer');
+        this.peerConnection.createOffer(this.setLocalAndSendMessage, this.handleCreateOfferError);
+    }
+
+    doAnswer() {
         console.log('Sending answer to peer.');
-        peerConnection.createAnswer().then(
-          setLocalAndSendMessage,
-          onCreateSessionDescriptionError
+        this.peerConnection.createAnswer().then(
+          this.setLocalAndSendMessage,
+          this.onCreateSessionDescriptionError
         );
     }
 
-    const handleCreateOfferError = (event) => {
+    handleCreateOfferError(event) {
         console.log('createOffer() error: ', event);
     }
 
-    const setLocalAndSendMessage = (sessionDescription) => {
-        peerConnection.setLocalDescription(sessionDescription);
+    setLocalAndSendMessage(sessionDescription) {
+        this.peerConnection.setLocalDescription(sessionDescription);
         console.log('setLocalAndSendMessage sending message', sessionDescription);
-        roomController.sendMessage(sessionDescription);
+        this.sendMessage(sessionDescription);
     }
       
-    const onCreateSessionDescriptionError = (error) => {
+    onCreateSessionDescriptionError(error) {
         console.log('Failed to create session description: ' + error.toString());
     }
       
-    const hangup = () => {
+    hangup() {
         console.log('Hanging up.');
-        stop();
-        roomController.sendMessage('bye');
-    }
-      
-    const handleRemoteHangup = () => {
-        console.log('Session terminated.');
-        stop();
-        roomController.isInitiator = true; //when remote leaves, this client will be the new initiator
+        this.stopConnection();
+        this.sendMessage('bye');
     }
 
-    const stop = () => {
-        isStarted = false;
-        dataChannel.close();
-        peerConnection.close();
-        peerConnection = null;
-        remoteVideo.pause();
-        remoteVideo.removeAttribute('src'); // empty source
-        remoteVideo.removeAttribute('autoplay');
-        remoteStream = null;
-        remoteVideo.load();
+    handleRemoteHangup() {
+        console.log('Session terminated.');
+        this.stopConnection();
+        this.isInitiator = true; //when remote leaves, this client will be the new initiator
+    }
+
+    stopConnection() {
+        this.isStarted = false;
+        this.dataChannel.close();
+        this.peerConnection.close();
+        this.peerConnection = null;
+        this.remoteVideo.pause();
+        this.remoteVideo.removeAttribute('src'); // empty source
+        this.remoteVideo.removeAttribute('autoplay');
+        this.remoteStream = null;
+        this.remoteVideo.load();
     }
 
     ///////////////////////////////////////////////
     /////   synchronization of gameobjects    /////
     ///////////////////////////////////////////////
 
-    const startGameSync = () => {
-        let interval = setInterval(sendGameobjectPositions, 30);
+    startGameSync() {
+        // let interval = setInterval(sendGameobjectPositions, 30);
     }
   
-    const sendGameobjectPositions = () => {
+    sendGameobjectPositions() {
         //TODO send JSON Strings of gameobject and positions
-        if (dataChannel && dataChannel.readyState === "open") {
-            dataChannel.send(getSceneJSON());
+        if (this.dataChannel && this.dataChannel.readyState === "open") {
+            // dataChannel.send(getSceneJSON());
         }
     }
-    //TODO put this stuff in gameConroller.js or something
-
-
-    
-    return {
-        createPeerConnection,
-        maybeStart,
-        doCall,
-        doAnswer,
-        hangup,
-        handleRemoteHangup,
-        initDataChannel,
-        getRoomName,
-        sendMessage,
-        isInitiator,
-        isChannelReady,
-        dataChannel,
-        isStarted
-    }
+    /////////////////////////////////////
 }
 
