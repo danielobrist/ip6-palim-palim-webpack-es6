@@ -1,7 +1,9 @@
-# Three.js Webpack ES6 Boilerplate
-https://github.com/paulmg/ThreeJS-Webpack-ES6-Boilerplate/
+# Palim Palim
 
-A basic boilerplate for a Three.js project including the use of Webpack and ES6 syntax via Babel.
+A fun video chat application with integrated 3D multiplayer capabilities. //TODO project description
+
+Based on a basic boilerplate for a Three.js project including the use of Webpack and ES6 syntax via Babel.
+https://github.com/paulmg/ThreeJS-Webpack-ES6-Boilerplate/
 
 ## Project Structure
 ```
@@ -33,7 +35,8 @@ Then run dev script:
 npm run dev
 ```
 
-Spins up a webpack dev server at localhost:8080 and keeps track of all js and sass changes to files.
+Spins up a webpack dev server at localhost:8080 and keeps track of all js and sass changes to files. Useful for developing the Three.js-scene but does not start the node.js server, so the peer connection can not be tested (for this you have to build it and then start the node.js server locally - described next)
+
 
 ## Build
 ```
@@ -41,6 +44,13 @@ npm run build
 ```
 
 Cleans existing build folder while linting js folder and copies over the public assets folder from src. Then sets environment to production and compiles js and css into build.
+
+```
+npm start
+```
+
+Spins up the node.js server at localhost:8080 and uses the current prod build from the build folder.
+
 
 ## Other NPM Scripts
 You can run any of these individually if you'd like with the `npm run` command:
