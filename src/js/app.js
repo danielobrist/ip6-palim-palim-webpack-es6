@@ -19,8 +19,10 @@ initGame();
 
 
 function initVideoChat() {
-    videoCall = new VideoCall();
-    // TODO get isInitiator from VideoCall somehow...
+    if(__ENV__ !== 'dev') {
+        videoCall = new VideoCall();
+        // TODO get isInitiator from VideoCall somehow...
+    }
 }
 
 
