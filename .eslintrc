@@ -39,7 +39,7 @@
     "no-unused-vars": 1,
     "camelcase": 1,
     "eol-last": 1,
-    "indent": "off", //disabled for now, [1, 2, {"SwitchCase": 1}]
+    "indent": "off", //disabled for now
     "no-array-constructor": 1,
     "no-continue": 1,
     "no-lonely-if": 1,
@@ -55,6 +55,7 @@
   },
   "extends": "eslint:recommended",
   "parserOptions": {
-    "sourceType": "module"
+    "sourceType": "module",
+    "ecmaVersion": 8
   }
 }

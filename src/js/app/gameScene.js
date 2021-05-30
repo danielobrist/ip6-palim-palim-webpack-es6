@@ -67,7 +67,7 @@ export default class GameScene {
       this.stats.setUp();
     }
 
-    // Set up gui
+    // Set up dat gui
     if (Config.isDev) {
       this.gui = new DatGUI(this)
     }

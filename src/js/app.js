@@ -1,7 +1,11 @@
+import "core-js/stable";
+import "regenerator-runtime/runtime";
+
 import Config from './data/config';
 import Detector from './utils/detector';
 import GameScene from './app/gameScene';
-import VideoCall from './webrtc/videoCall';
+import VideoCall, {isInitiator} from './webrtc/videoCall';
+import {startGame} from './app/game';
 
 // Styles
 import './../css/app.scss';
@@ -33,6 +37,7 @@ function initGame() {
         Detector.addGetWebGLMessage();
     } else {
         const container = document.getElementById('appContainer');
-        new GameScene(container);
+        // new GameScene(container);
+        startGame(isInitiator);
     }
 }

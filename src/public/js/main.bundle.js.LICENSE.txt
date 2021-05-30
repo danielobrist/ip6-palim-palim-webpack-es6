@@ -8,6 +8,10 @@
 
 /*! ../../utils/orbitControls */
 
+/*! ../../webrtc/videoCall */
+
+/*! ../app/game */
+
 /*! ../components/material */
 
 /*! ../loaders/GLTFLoader */
@@ -15,6 +19,8 @@
 /*! ./../css/app.scss */
 
 /*! ./../data/config */
+
+/*! ./app/game */
 
 /*! ./app/gameScene */
 
@@ -29,6 +35,10 @@
 /*! ./components/renderer */
 
 /*! ./data/config */
+
+/*! ./game/gameController.js */
+
+/*! ./game/scene */
 
 /*! ./helpers/meshHelper */
 
@@ -54,9 +64,17 @@
 
 /*! @tweenjs/tween.js */
 
+/*! core-js/stable */
+
 /*! es6-promise */
 
+/*! regenerator-runtime/runtime */
+
 /*! three */
+
+/*! three/examples/jsm/controls/DragControls */
+
+/*! three/examples/jsm/loaders/GLTFLoader */
 
 /*!***********************!*\
   !*** ./src/js/app.js ***!
@@ -65,6 +83,10 @@
 /*!**************************!*\
   !*** ./src/css/app.scss ***!
   \**************************/
+
+/*!****************************!*\
+  !*** ./src/js/app/game.js ***!
+  \****************************/
 
 /*!*******************************!*\
   !*** ./src/js/data/config.js ***!
@@ -77,6 +99,10 @@
 /*!*********************************!*\
   !*** ./src/js/utils/helpers.js ***!
   \*********************************/
+
+/*!**********************************!*\
+  !*** ./src/js/app/game/scene.js ***!
+  \**********************************/
 
 /*!**********************************!*\
   !*** ./src/js/utils/detector.js ***!
@@ -144,6 +170,10 @@
 
 /*!*******************************************!*\
   !*** ./src/js/app/components/renderer.js ***!
+  \*******************************************/
+
+/*!*******************************************!*\
+  !*** ./src/js/app/game/gameController.js ***!
   \*******************************************/
 
 /*!********************************************!*\
