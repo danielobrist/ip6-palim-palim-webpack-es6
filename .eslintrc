@@ -1,7 +1,7 @@
 {
   "rules": {
     "no-cond-assign": 1,
-    "no-console": 1,
+    "no-console": 0, //TODO maybe enable later
     "no-constant-condition": 1,
     "no-control-regex": 1,
     "no-debugger": 1,
@@ -39,7 +39,7 @@
     "no-unused-vars": 1,
     "camelcase": 1,
     "eol-last": 1,
-    "indent": [1, 2, {"SwitchCase": 1}],
+    "indent": "off", //disabled for now, [1, 2, {"SwitchCase": 1}]
     "no-array-constructor": 1,
     "no-continue": 1,
     "no-lonely-if": 1,
