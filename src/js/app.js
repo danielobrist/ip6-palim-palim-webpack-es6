@@ -1,61 +1,91 @@
 import Config from './data/config';
 import Detector from './utils/detector';
-import Main from './app/main';
-import PeerController from './webrtc/peerController';
+import GameScene from './app/gameScene';
+import VideoChat from './webrtc/videoChat';
 
 // Styles
 import './../css/app.scss';
+import PeerController from './webrtc/peerController';
+import RoomController from './webrtc/roomController';
+import { VideoCall } from './webrtc/videoCall';
 
-let localStream, remoteStream;
+export {maybeStart};
 
-const localVideo = document.querySelector('#localVideo');
-const remoteVideo = document.querySelector('#remoteVideo');
-
+// const peerController = new PeerController();
+// const videoChat = new VideoChat();
+// const roomController = new RoomController(videoChat, peerController)
+let videoChat;
 // Check environment and set the Config helper
 if(__ENV__ === 'dev') {
-  console.log('----- RUNNING IN DEV ENVIRONMENT! -----');
+    console.log('----- RUNNING IN DEV ENVIRONMENT! -----');
 
-  Config.isDev = true;
+    Config.isDev = true;
 }
 
-function init() {
+initVideoChat()
+initGame();
 
-  if (!Config.isDev) {
-    const peerController = new PeerController();
-  }
 
-  // Check for webGL capabilities
-  if(!Detector.webgl) {
-    Detector.addGetWebGLMessage();
-  } else {
-    const container = document.getElementById('appContainer');
-    new Main(container);
-  }
+function initVideoChat() {
+    new VideoCall();
+    // videoChat = new VideoChat();
+    // videoChat.joinRoom(prompt('Enter room name please:'));
+
+    // navigator.mediaDevices.getUserMedia({
+    //     video: true,
+    //     audio: true
+    // })
+    // .then(initLocalStream)
+    // .catch(function(e) {
+    //     console.log('ERROR getting user media:' + e.message)
+    //     alert('getUserMedia() error: ' + e.name);
+    // });
+
 }
 
-function initStream() {
-  console.log('initStream with this: ' + this)
-  navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true
-    })
-    .then(initLocalStream)
-    .catch(function(e) {
-      console.log('ERROR getting user media:' + e.message)
-      alert('getUserMedia() error: ' + e.name);
-    });
+
+
+function initGame() {
+    // Check for webGL capabilities
+    if(!Detector.webgl) {
+        Detector.addGetWebGLMessage();
+    } else {
+        const container = document.getElementById('appContainer');
+        new GameScene(container);
+    }
 }
 
 function initLocalStream(stream) {
-  console.log('Adding local stream.');
-  console.log('stream: ' + stream);
-  localStream = stream;
-  localVideo.srcObject = stream;
-  // this.sendMessage('got user media');
-  // if (this.isInitiator) {
-  //   this.maybeStart();
-  // }
+    console.log('Adding local stream.');
+    console.log('stream: ' + stream);
+    videoChat._localStream = stream;
+    videoChat._localVideo.srcObject = stream;
+    videoChat.sendSignalingMessage('got user media');
+    // needed=?
+    if (videoChat._isInitiator) {
+        videoChat.maybeStart();
+    }
 }
 
-initStream()
-init();
+function maybeStart() {
+    //TODO call method in videoChat
+    console.log('>>>>>>> maybeStart() ', videoChat._isChatStarted, videoChat._localStream, videoChat._isRoomReady);
+    if (!videoChat._isChatStarted && typeof videoChat._localStream !== 'undefined' && videoChat._isRoomReady) {
+      console.log('>>>>>> creating peer connection');
+        //   createPeerConnection();
+      
+      for (const track of videoChat._localStream.getTracks()) {
+        videoChat._peerConnection.addTrack(track);
+      }
+  
+      videoChat._isChatStarted = true;
+      console.log('isInitiator', videoChat._isInitiator);
+      if (videoChat._isInitiator) {
+        // initDataChannel();
+        console.log('Created RTCDataChannel');
+        videoChat.doCall();
+      }
+  
+    //   gameController.startSharedSceneSync();
+    }
+}

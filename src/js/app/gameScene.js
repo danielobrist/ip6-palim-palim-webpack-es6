@@ -27,7 +27,7 @@ import Config from './../data/config';
 // -- End of imports
 
 // This class instantiates and ties all of the components together, starts the loading process and renders the main loop
-export default class Main {
+export default class GameScene {
   constructor(container) {
     // Set container property to container element
     this.container = container;
