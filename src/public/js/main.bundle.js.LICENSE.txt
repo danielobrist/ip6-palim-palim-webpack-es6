@@ -72,9 +72,19 @@
 
 /*! three */
 
+/*! three/examples/js/libs/ammo.wasm.js */
+
 /*! three/examples/jsm/controls/DragControls */
 
 /*! three/examples/jsm/loaders/GLTFLoader */
+
+/*!********************!*\
+  !*** fs (ignored) ***!
+  \********************/
+
+/*!**********************!*\
+  !*** path (ignored) ***!
+  \**********************/
 
 /*!***********************!*\
   !*** ./src/js/app.js ***!

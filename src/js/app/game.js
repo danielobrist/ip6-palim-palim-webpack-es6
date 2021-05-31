@@ -4,10 +4,10 @@ import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader';
 import {DragControls} from 'three/examples/jsm/controls/DragControls'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
 import {GameController} from './game/gameController.js';
-
+import * as Ammo from './physics/ammo.js';
 import {initScene, initCamera} from './game/scene';
 
-export {startGame, getSceneJSON, updateRemoteObjects, moveRemoteVideoToScene};
+export {startPhys, startGame, getSceneJSON, updateRemoteObjects, moveRemoteVideoToScene};
 
 const gameController = GameController();
 
@@ -15,6 +15,7 @@ const gameController = GameController();
 const objectsToSync = new Map();
 
 const renderer = new THREE.WebGLRenderer({
+    antialias: true,
     alpha: true
 });
 
@@ -30,13 +31,39 @@ let isSeller = false;
 let duckMesh;
 // let orbitControls;
 
+let physicsWorld;
+
+const startPhys = () => {
+    Ammo().then( function( Ammo ) {
+        setupPhysicsWorld(Ammo);
+
+        startGame(true);
+
+    } )
+}
+
+
 function startGame(isInitiator) {
+
+
     isSeller = isInitiator;
     console.log("Started game with isInitiator = " + isInitiator);
     init();
     init3DObjects();
     activateDragControls();
     animate();
+}
+
+function setupPhysicsWorld(Ammo){
+
+    let collisionConfiguration  = new Ammo.btDefaultCollisionConfiguration(),
+        dispatcher              = new Ammo.btCollisionDispatcher(collisionConfiguration),
+        overlappingPairCache    = new Ammo.btDbvtBroadphase(),
+        solver                  = new Ammo.btSequentialImpulseConstraintSolver();
+
+    physicsWorld           = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
+    physicsWorld.setGravity(new Ammo.btVector3(0, -10, 0));
+
 }
 
 function init() {
